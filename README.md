@@ -103,20 +103,7 @@ client_id = "123"
 Per default, `scion-orchestrator` runs a bootstrapping server on all IPs on the address `:8041`. Endhosts can bootstrap into the AS by configuring the proper IP of the AS host followed by the port `8041`. If the endhost is running the `scion-orchestrator` tool, this will happen automatically if the `bootstrap.server` is configured accordingly.
 
 ## Run as Endhost
-`scion-orchestrator` offers to set the `mode` in the `scion-orchestrator.toml` to `endhost`. This will force the host to fetch the SCION configuration from the address configured in `bootstrap.server`. In `endhost` mode the host is still able to run the `Metrics Server` configured via `metrics.server`. The endhost mode requires to connect to a valid bootstrapping URL to start and a responding bootstrapping server.
-
-A minimal configuration for an endhost that does not run any infrastructure SCION components is:
-
-```toml
-isd_as = "1-150"
-mode = "endhost"
-
-[metrics]
-server = "127.0.0.1:33401"
-
-[bootstrap]
-server = "10.150.0.254:8041"
-```
+The orchestrator does not support running a pure endhost anymore. This diverges too much from the original design idea to orchestrate AS services. Endhosts are supposed to use the upcoming endhost builder library.
 
 ## Integration Testing
 At first, build the `scion-orchestrator` tool and copy the binary into the `integration` folder.

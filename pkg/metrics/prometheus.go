@@ -54,19 +54,15 @@ func mapStatusToValue(status string) float64 {
 
 func (asStatus *HostStatus) UpdateMetrics() {
 
-	if asStatus.Mode == "endhost" {
-		hostModeGauge.WithLabelValues("Mode", "core").Set(1)
-	} else {
-		hostModeGauge.WithLabelValues("Mode", "core").Set(2)
-		serviceStatusGauge.WithLabelValues("BootstrapServer", "core").Set(mapStatusToValue(asStatus.BootstrapServer.Status))
-		serviceStatusGauge.WithLabelValues("CertificateRenewal", "core").Set(mapStatusToValue(asStatus.CertificateRenewal.Status))
-		for name, status := range asStatus.ControlServices {
-			serviceStatusGauge.WithLabelValues(name, "control").Set(mapStatusToValue(status.Status))
-		}
+	hostModeGauge.WithLabelValues("Mode", "core").Set(2)
+	serviceStatusGauge.WithLabelValues("BootstrapServer", "core").Set(mapStatusToValue(asStatus.BootstrapServer.Status))
+	serviceStatusGauge.WithLabelValues("CertificateRenewal", "core").Set(mapStatusToValue(asStatus.CertificateRenewal.Status))
+	for name, status := range asStatus.ControlServices {
+		serviceStatusGauge.WithLabelValues(name, "control").Set(mapStatusToValue(status.Status))
+	}
 
-		for name, status := range asStatus.BorderRouters {
-			serviceStatusGauge.WithLabelValues(name, "router").Set(mapStatusToValue(status.Status))
-		}
+	for name, status := range asStatus.BorderRouters {
+		serviceStatusGauge.WithLabelValues(name, "router").Set(mapStatusToValue(status.Status))
 	}
 
 	serviceStatusGauge.WithLabelValues("Dispatcher", "core").Set(mapStatusToValue(asStatus.Dispatcher.Status))

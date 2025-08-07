@@ -145,15 +145,6 @@ func main() {
 	if opts.Config != "" { // Run as a service
 		log.Println("[Main] Running as service")
 
-		if config.Mode == "endhost" {
-			log.Println("[Main] Running bootstrapper to fetch configuration...")
-			err = bootstrap.BootstrapFromAddress(env, config)
-			if err != nil && !config.Bootstrap.AllowClientFail {
-				log.Println("[Main] Failed to bootstrap host: ", err)
-				log.Fatal(err)
-			}
-		}
-
 		err := environment.LoadServices(env, scionConfig, config)
 		if err != nil {
 			log.Fatal(err)
@@ -281,88 +272,76 @@ func runBackgroundServices(env *environment.HostEnvironment, config *conf.Config
 		})
 	}
 
-	if config.Mode == "endhost" {
+	if !config.ServiceConfig.DisableBootstrapServer {
+		eg.Go(func() error {
+			return bootstrap.RunBootstrapService(env.ConfigPath, config.Bootstrap.Server, config)
+		})
+	}
 
-		// Standalone does its own health check
-		if !run {
-			eg.Go(func() error {
-				healtchCheck := environment.NewServiceHealthCheck()
-				healtchCheck.Run()
-				return nil
-			})
-		}
-	} else {
-		if !config.ServiceConfig.DisableBootstrapServer {
-			eg.Go(func() error {
-				return bootstrap.RunBootstrapService(env.ConfigPath, config.Bootstrap.Server, config)
-			})
-		}
-
-		if !config.ServiceConfig.DisablePilaServer && config.Pila.Server != "" {
-			fmt.Println(config.Pila)
-			eg.Go(func() error {
-				log.Println("[Main] Starting PILA server for endhost certificates...")
-				scionPilaConfig := &scionpila.SCIONPilaConfig{
-					Server:         config.Pila.Server,
-					CAKeyPath:      config.Pila.CAKeyPath,
-					CACertPath:     config.Pila.CACertPath,
-					AllowedSubnets: config.Pila.AllowedSubnets,
-				}
-				server := scionpila.NewSCIONPilaServer(scionPilaConfig)
-				return server.Run()
-			})
-		}
-
-		log.Println("[Main] Running background services for CA")
-
-		// TODO: Check which services do really need a control plane cert/key
-		// TODO: Need to fail here??
-		if len(scionConfig.ControlServices) > 0 {
-			err := certutils.EnsureASPrivateKeyExists(env.ConfigPath, config.IsdAs)
-			if err != nil {
-				log.Println("[Main] Error ensuring AS private key exists: ", err)
+	if !config.ServiceConfig.DisablePilaServer && config.Pila.Server != "" {
+		fmt.Println(config.Pila)
+		eg.Go(func() error {
+			log.Println("[Main] Starting PILA server for endhost certificates...")
+			scionPilaConfig := &scionpila.SCIONPilaConfig{
+				Server:         config.Pila.Server,
+				CAKeyPath:      config.Pila.CAKeyPath,
+				CACertPath:     config.Pila.CACertPath,
+				AllowedSubnets: config.Pila.AllowedSubnets,
 			}
+			server := scionpila.NewSCIONPilaServer(scionPilaConfig)
+			return server.Run()
+		})
+	}
+
+	log.Println("[Main] Running background services for CA")
+
+	// TODO: Check which services do really need a control plane cert/key
+	// TODO: Need to fail here??
+	if len(scionConfig.ControlServices) > 0 {
+		err := certutils.EnsureASPrivateKeyExists(env.ConfigPath, config.IsdAs)
+		if err != nil {
+			log.Println("[Main] Error ensuring AS private key exists: ", err)
 		}
+	}
 
-		// log.Println(config.Ca.Clients)
-		if len(config.Ca.Clients) > 0 {
-			eg.Go(func() error {
-				// TODO: Only run if core AS
-				parts := strings.Split(config.IsdAs, "-")
-				ca := scionca.NewSCIONCertificateAuthority(env.ConfigPath, parts[0], config.Ca.CertValidityHours)
-				err := ca.LoadCA()
-				if err != nil {
-					return err
-				}
+	// log.Println(config.Ca.Clients)
+	if len(config.Ca.Clients) > 0 {
+		eg.Go(func() error {
+			// TODO: Only run if core AS
+			parts := strings.Split(config.IsdAs, "-")
+			ca := scionca.NewSCIONCertificateAuthority(env.ConfigPath, parts[0], config.Ca.CertValidityHours)
+			err := ca.LoadCA()
+			if err != nil {
+				return err
+			}
 
-				apiServer := scionca.NewCaApiServer(env.ConfigPath, &config.Ca, ca)
-				err = apiServer.LoadClientsAndSecrets()
-				if err != nil {
-					return err
-				}
+			apiServer := scionca.NewCaApiServer(env.ConfigPath, &config.Ca, ca)
+			err = apiServer.LoadClientsAndSecrets()
+			if err != nil {
+				return err
+			}
 
-				return apiServer.Run()
-			})
-		}
+			return apiServer.Run()
+		})
+	}
 
-		// Standalone does its own health check
-		if !run {
-			eg.Go(func() error {
-				healtchCheck := environment.NewServiceHealthCheck()
-				healtchCheck.Run()
-				return nil
-			})
-		}
+	// Standalone does its own health check
+	if !run {
+		eg.Go(func() error {
+			healtchCheck := environment.NewServiceHealthCheck()
+			healtchCheck.Run()
+			return nil
+		})
+	}
 
-		if !config.ServiceConfig.DisableCertRenewal {
-			eg.Go(func() error {
-				renewer := scionca.NewCertificateRenewer(env.ConfigPath, config.IsdAs, 6)
-				log.Println("[Main] Starting certificate renewal with 30s delay...")
-				time.Sleep(30 * time.Second)
-				renewer.Run()
-				return nil
-			})
-		}
+	if !config.ServiceConfig.DisableCertRenewal {
+		eg.Go(func() error {
+			renewer := scionca.NewCertificateRenewer(env.ConfigPath, config.IsdAs, 6)
+			log.Println("[Main] Starting certificate renewal with 30s delay...")
+			time.Sleep(30 * time.Second)
+			renewer.Run()
+			return nil
+		})
 	}
 
 	return eg.Wait()

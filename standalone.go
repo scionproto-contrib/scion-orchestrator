@@ -10,7 +10,6 @@ import (
 
 	"github.com/netsys-lab/scion-orchestrator/conf"
 	"github.com/netsys-lab/scion-orchestrator/environment"
-	"github.com/netsys-lab/scion-orchestrator/pkg/bootstrap"
 	"github.com/netsys-lab/scion-orchestrator/pkg/fileops"
 	"golang.org/x/sync/errgroup"
 )
@@ -36,15 +35,6 @@ func runStandalone(env *environment.HostEnvironment, config *conf.Config) error 
 	}
 
 	serviceCount := 0
-
-	if config.Mode == "endhost" {
-		log.Println("[Main] Running bootstrapper to fetch configuration...")
-		err = bootstrap.BootstrapFromAddress(env, config)
-		if err != nil && !config.Bootstrap.AllowClientFail {
-			log.Println("[Main] Failed to bootstrap host: ", err)
-			log.Fatal(err)
-		}
-	}
 
 	eg := errgroup.Group{}
 
