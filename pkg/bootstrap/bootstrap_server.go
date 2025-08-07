@@ -20,7 +20,7 @@ func RunBootstrapServer(configDir string, url string, config *conf.Config) error
 	//errorLog := log.New(os.Stderr, "ERROR: ", log.LstdFlags)
 
 	// Set up file server
-	fileServer := http.FileServer(http.Dir(configDir))
+	// fileServer := http.FileServer(http.Dir(configDir))
 
 	// Define routes
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,9 @@ func RunBootstrapServer(configDir string, url string, config *conf.Config) error
 				http.ServeFile(w, r, filepath.Join(configDir, "trcs.json"))
 			}
 		} else {
-			fileServer.ServeHTTP(w, r)
+			log.Println("[Bootstrap Server] Invalid request URL: ", r.URL.Path)
+			http.Error(w, "Not Found", http.StatusNotFound)
+			// fileServer.ServeHTTP(w, r)
 		}
 	})
 
