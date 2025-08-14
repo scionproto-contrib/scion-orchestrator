@@ -67,11 +67,11 @@ func NewConfig() *Config {
 		},
 		Ca: CA{
 			CertValidityHours: 72,
-			Server:            ":3000",
+			Server:            "127.0.0.1:3000",
 			Clients:           []string{},
 		},
 		Api: Api{
-			Address: ":8843",
+			Address: "127.0.0.1:8843",
 		},
 		ServiceConfig: ServiceConfig{},
 		Pila:          scionpila.SCIONPilaConfig{},
