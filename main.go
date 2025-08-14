@@ -341,6 +341,8 @@ func runBackgroundServices(env *environment.HostEnvironment, config *conf.Config
 					return err
 				}
 
+				metrics.Status.IsCa = true
+
 				return apiServer.Run()
 			})
 		}

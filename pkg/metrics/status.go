@@ -18,6 +18,7 @@ type ServiceStatus struct {
 
 type HostStatus struct {
 	Mode               string
+	IsCa               bool
 	ServiceMode        string
 	BootstrapServer    ServiceStatus
 	Dispatcher         ServiceStatus

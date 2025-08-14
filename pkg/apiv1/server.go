@@ -16,6 +16,7 @@ import (
 	"github.com/netsys-lab/scion-orchestrator/conf"
 	"github.com/netsys-lab/scion-orchestrator/environment"
 	"github.com/netsys-lab/scion-orchestrator/pkg/certutils"
+	"github.com/netsys-lab/scion-orchestrator/pkg/metrics"
 )
 
 const (
@@ -89,7 +90,11 @@ func RegisterRoutes(env *environment.HostEnvironment, config *conf.Config, r *gi
 	} else {
 		GenerateCSRFromTemplateHandler(routerGroup, config.IsdAs, env.ConfigPath)
 		AddCertificateChainHandler(routerGroup, config.IsdAs, env.ConfigPath)
-		SignCertificateByCSRHandler(routerGroup, config.IsdAs, env.ConfigPath, config)
+
+		if metrics.Status.IsCa {
+			SignCertificateByCSRHandler(routerGroup, config.IsdAs, env.ConfigPath, config)
+		}
+
 		AddStatusHandler(routerGroup)
 		AddSettingsHandler(routerGroup, config)
 		GetTopologyHandler(routerGroup, env.ConfigPath)

@@ -1,0 +1,23 @@
+{{ template "basetop" . }}
+<div class="min-h-screen bg-surface-dark text-on-surface-dark p-6 flex items-center justify-center">
+    <div class="overflow-hidden w-full overflow-x-auto flex items-center justify-center">
+        <div
+            class="w-full max-w-md rounded-2xl bg-surface-dark-alt shadow-xl ring-outline-dark p-8 text-center space-y-6">
+
+            <div>
+                <h1 class="text-7xl font-bold text-on-surface-dark-strong">404</h1>
+                <p class="text-2xl font-semibold mt-2 text-on-surface-dark-strong">Page Not Found</p>
+                <p class="text-on-surface-dark mt-3">Sorry, we couldn’t find the page you’re looking for.</p>
+            </div>
+
+            <div class="pt-4">
+                <a href="/"
+                    class="inline-block px-6 py-3 rounded-lg text-sm font-semibold bg-primary-dark text-on-primary-dark hover:bg-outline-dark hover:text-on-surface-dark transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-dark">
+                    Go Back Home
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{{ template "basebottom" . }}

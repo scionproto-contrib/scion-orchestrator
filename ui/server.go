@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/netsys-lab/scion-orchestrator/conf"
 	"github.com/netsys-lab/scion-orchestrator/environment"
+	"github.com/netsys-lab/scion-orchestrator/pkg/metrics"
 )
 
 // RegisterRoutes sets up the routes using Gin
@@ -88,6 +89,13 @@ func RegisterRoutes(env *environment.HostEnvironment, config *conf.Config, r *gi
 		})
 
 		routerGroup.GET("/certificate-authority", func(c *gin.Context) {
+
+			if !metrics.Status.IsCa {
+				c.HTML(http.StatusNotFound, "404.html", gin.H{
+					"title": "SCION Orchestrator - Not Found",
+				})
+			}
+
 			c.HTML(http.StatusOK, "certificate-authority.html", gin.H{
 				"title": "SCION Orchestrator",
 			})
