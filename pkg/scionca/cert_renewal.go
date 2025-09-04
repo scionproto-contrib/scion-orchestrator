@@ -10,10 +10,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
+	"github.com/netsys-lab/scion-orchestrator/pkg/certutils"
 	"github.com/netsys-lab/scion-orchestrator/pkg/fileops"
 	"github.com/netsys-lab/scion-orchestrator/pkg/metrics"
 )
@@ -58,33 +58,9 @@ func (cr *CertificateRenewer) LoadCertificateFiles() error {
 	cr.CertPath = certFiles[0]
 	isd := strings.Split(cr.ISDAS, "-")[0]
 
-	trcDir := filepath.Join(cr.ConfigDir, "certs")
-	trcFiles, err := cr.listFilesByPrefixAndSuffix(trcDir, "ISD"+isd, ".trc")
+	cr.LatestTRC, cr.PenultimateTRC, err = certutils.GetTwoLatestTRCsForISD(cr.listFilesByPrefixAndSuffix, cr.ConfigDir, isd)
 	if err != nil {
-		return err
-	}
-	if len(trcFiles) == 0 {
-		return fmt.Errorf("No TRC files found in %s", trcDir)
-	}
-	sort.Slice(trcFiles, func(i, j int) bool {
-		filenameI := filepath.Base(trcFiles[i])
-		filenameJ := filepath.Base(trcFiles[j])
-
-		var bI, sI, bJ, sJ, isdI, isdJ int
-		fmt.Sscanf(filenameI, "ISD%d-B%d-S%d.trc", &isdI, &bI, &sI)
-		fmt.Sscanf(filenameJ, "ISD%d-B%d-S%d.trc", &isdJ, &bJ, &sJ)
-
-		if bI != bJ {
-			return bI < bJ
-		}
-		return sI < sJ
-	})
-
-	cr.LatestTRC = trcFiles[len(trcFiles)-1] // Get the latest TRC version
-	if len(trcFiles) > 1 {
-		// XXX: This parameter is input to the scion-pki command, which internally
-		// verifies that the penultimate TRC is in the grace period of the latest TRC.
-		cr.PenultimateTRC = trcFiles[len(trcFiles)-2] // Get the penultimate TRC version
+		return fmt.Errorf("failed to get TRCs for ISD %s: %w", isd, err)
 	}
 
 	return nil
