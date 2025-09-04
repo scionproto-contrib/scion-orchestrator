@@ -24,7 +24,8 @@ type CertificateRenewer struct {
 	CertPath         string
 	ConfigDir        string
 	ISDAS            string
-	TRC              string
+	LatestTRC        string
+	PenultimateTRC   string
 
 	listFilesByPrefixAndSuffix func(root string, prefix string, suffix string) ([]string, error)
 }
@@ -79,7 +80,13 @@ func (cr *CertificateRenewer) LoadCertificateFiles() error {
 		return sI < sJ
 	})
 
-	cr.TRC = trcFiles[len(trcFiles)-1] // Get the latest TRC version
+	cr.LatestTRC = trcFiles[len(trcFiles)-1] // Get the latest TRC version
+	if len(trcFiles) > 1 {
+		// XXX: This parameter is input to the scion-pki command, which internally
+		// verifies that the penultimate TRC is in the grace period of the latest TRC.
+		cr.PenultimateTRC = trcFiles[len(trcFiles)-2] // Get the penultimate TRC version
+	}
+
 	return nil
 }
 
@@ -207,19 +214,47 @@ func (cr *CertificateRenewer) validateCert(file string) error {
 }
 
 func (cr *CertificateRenewer) verifyCert(file string) error {
-	err, strOut, strErr := executeCmd("scion-pki", "certificate", "verify", "--trc", cr.TRC, file)
-	if err != nil {
-		return fmt.Errorf("[Renewer]: Failed to verify via scion-pki %s, err: %s", err, strErr)
+	// Try with latest TRC first
+	err, strOut, strErr := executeCmd("scion-pki", "certificate", "verify", "--trc", cr.LatestTRC, file)
+	if err == nil {
+		log.Println("[Renewer] ", strOut)
+		return nil
 	}
-	log.Println("[Renewer] ", strOut)
-	return nil
+
+	latestErr := fmt.Errorf("failed to verify with latest TRC: %w (stderr: %s)", err, strErr)
+
+	// If we have a penultimate TRC, try with that too
+	if cr.PenultimateTRC != "" {
+		err, strOut, strErr := executeCmd("scion-pki", "certificate", "verify", "--trc", cr.PenultimateTRC, file)
+		if err == nil {
+			log.Println("[Renewer] ", strOut)
+			return nil
+		}
+		return fmt.Errorf("%v; failed to verify with penultimate TRC: %w (stderr: %s)", latestErr, err, strErr)
+	}
+
+	return latestErr
 }
 
 func (cr *CertificateRenewer) renewCert(outCert string, outKey string) error {
-	err, strOut, strErr := executeCmd("scion-pki", "certificate", "renew", cr.CertPath, cr.KeyPath, "--out", outCert, "--out-key", outKey, "--trc", cr.TRC)
-	if err != nil {
-		return fmt.Errorf("[Renewer]: Failed to renew via scion-pki %s, err: %s", err, strErr)
+	// Try with latest TRC first
+	err, strOut, strErr := executeCmd("scion-pki", "certificate", "renew", cr.CertPath, cr.KeyPath, "--out", outCert, "--out-key", outKey, "--trc", cr.LatestTRC)
+	if err == nil {
+		log.Println("[Renewer] ", strOut)
+		return nil
 	}
-	log.Println("[Renewer] ", strOut)
-	return nil
+
+	latestErr := fmt.Errorf("failed to renew with latest TRC: %w (stderr: %s)", err, strErr)
+
+	// If we have a penultimate TRC, try with that too
+	if cr.PenultimateTRC != "" {
+		err, strOut, strErr := executeCmd("scion-pki", "certificate", "renew", cr.CertPath, cr.KeyPath, "--out", outCert, "--out-key", outKey, "--trc", cr.PenultimateTRC)
+		if err == nil {
+			log.Println("[Renewer] ", strOut)
+			return nil
+		}
+		return fmt.Errorf("%v; failed to renew with penultimate TRC: %w (stderr: %s)", latestErr, err, strErr)
+	}
+
+	return latestErr
 }

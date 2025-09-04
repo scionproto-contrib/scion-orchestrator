@@ -69,28 +69,32 @@ func TestLoadCertificateFiles(t *testing.T) {
 	trcPath10 := createTRCFile(t, trcDir, isd, 1, 10)
 
 	tests := []struct {
-		name          string
-		trcFiles      []string
-		expectedTRC   string
-		expectSuccess bool
+		name                   string
+		trcFiles               []string
+		expectedLatestTRC      string
+		expectedPenultimateTRC string
+		expectSuccess          bool
 	}{
 		{
-			name:          "Only trcPath1",
-			trcFiles:      []string{trcPath1},
-			expectedTRC:   trcPath1,
-			expectSuccess: true,
+			name:                   "Only trcPath1",
+			trcFiles:               []string{trcPath1},
+			expectedLatestTRC:      trcPath1,
+			expectedPenultimateTRC: "",
+			expectSuccess:          true,
 		},
 		{
-			name:          "Both trcPath9 and trcPath10",
-			trcFiles:      []string{trcPath10, trcPath9},
-			expectedTRC:   trcPath10,
-			expectSuccess: true,
+			name:                   "Both trcPath9 and trcPath10",
+			trcFiles:               []string{trcPath10, trcPath9},
+			expectedLatestTRC:      trcPath10,
+			expectedPenultimateTRC: trcPath9,
+			expectSuccess:          true,
 		},
 		{
-			name:          "No TRC files",
-			trcFiles:      []string{},
-			expectedTRC:   "",
-			expectSuccess: false,
+			name:                   "No TRC files",
+			trcFiles:               []string{},
+			expectedLatestTRC:      "",
+			expectedPenultimateTRC: "",
+			expectSuccess:          false,
 		},
 	}
 
@@ -126,8 +130,11 @@ func TestLoadCertificateFiles(t *testing.T) {
 				if cr.CertPath != certPath {
 					t.Errorf("Expected CertPath to be %s, got %s", certPath, cr.CertPath)
 				}
-				if cr.TRC != tt.expectedTRC {
-					t.Errorf("Expected TRC to be %s, got %s", tt.expectedTRC, cr.TRC)
+				if cr.LatestTRC != tt.expectedLatestTRC {
+					t.Errorf("Expected LatestTRC to be %s, got %s", tt.expectedLatestTRC, cr.LatestTRC)
+				}
+				if cr.PenultimateTRC != tt.expectedPenultimateTRC {
+					t.Errorf("Expected PenultimateTRC to be %s, got %s", tt.expectedPenultimateTRC, cr.PenultimateTRC)
 				}
 			} else if err == nil {
 				t.Error("Expected error, got nil")
