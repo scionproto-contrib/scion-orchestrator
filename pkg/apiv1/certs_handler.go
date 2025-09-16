@@ -131,17 +131,25 @@ func AddCertificateChainHandler(eng *gin.RouterGroup, isdAS string, configDir st
 
 		isd := scionutils.GetISDFromISDAS(isdAS)
 
-		trcFile, err := certutils.GetLatestTRCForISD(configDir, isd)
+		latestTRC, penultimateTRC, err := certutils.GetTwoLatestTRCsForISD(fileops.ListFilesByPrefixAndSuffix, configDir, isd)
 		if err != nil {
 			log.Println("[CPPKI] Could not get the latest TRC file: ", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not get the latest TRC file"})
 			return
 		}
 
-		err = certutils.VerifySCIONCertificateChain(certChainFile.Name(), trcFile)
+		err = certutils.VerifySCIONCertificateChain(certChainFile.Name(), latestTRC)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not verify the certificate chain"})
-			return
+			if penultimateTRC == "" {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not verify the certificate chain with the latest TRC"})
+				return
+
+			}
+			err = certutils.VerifySCIONCertificateChain(certChainFile.Name(), penultimateTRC)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not verify the certificate chain with two latest TRCs"})
+				return
+			}
 		}
 
 		// Move the certificate chain to the correct location

@@ -9,6 +9,7 @@ import (
 // TODO: Windows Support
 func VerifySCIONCertificateChain(certFile string, trcFile string) error {
 	cmd := exec.Command("scion-pki", "certificate", "verify", "--trc", trcFile, certFile)
+	log.Println("[CertUtils] Verifying certificate chain, ", cmd.String())
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Println("[CertUtils] Could not verify the certificate chain: " + err.Error())
