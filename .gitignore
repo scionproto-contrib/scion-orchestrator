@@ -42,3 +42,4 @@ bin_latest/
 config_latest/
 
 bin_release
+.DS_Store
