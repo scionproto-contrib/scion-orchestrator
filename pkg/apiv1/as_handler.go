@@ -182,9 +182,21 @@ func AddSCIONLinksHandler(eng *gin.RouterGroup, configDir string) {
 			for _, control := range controls {
 				err := control.Restart()
 				if err != nil {
-					fmt.Println("Could not restart control service %s", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Could not restart control service %s", control)})
+					fmt.Printf("Could not restart control service %s\n", err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Could not restart control service %v", control)})
 					return
+				}
+			}
+
+			services := environment.GetStandaloneServices()
+			for _, service := range services {
+				if strings.Contains(service.Name, "daemon") || strings.Contains(service.Name, "sciond") {
+					err := service.Restart()
+					if err != nil {
+						fmt.Printf("Could not restart service %s\n", err)
+						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Could not restart service %s", service)})
+						return
+					}
 				}
 			}
 		} else {
@@ -203,6 +215,18 @@ func AddSCIONLinksHandler(eng *gin.RouterGroup, configDir string) {
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Could not restart control service %s", control)})
 					return
+				}
+			}
+
+			services := environment.GetServiceList()
+			for _, service := range services {
+				if strings.Contains(service.Name, "daemon") || strings.Contains(service.Name, "sciond") {
+					err := service.Restart()
+					if err != nil {
+						fmt.Printf("Could not restart service %s\n", err)
+						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Could not restart service %s", service)})
+						return
+					}
 				}
 			}
 		}

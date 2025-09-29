@@ -63,6 +63,14 @@ func GetStandaloneBorderRouters() []*StandaloneService {
 	return services
 }
 
+func GetStandaloneServices() []*StandaloneService {
+	services := make([]*StandaloneService, 0)
+	for _, service := range StandaloneServices {
+		services = append(services, service)
+	}
+	return services
+}
+
 type ServiceHealthCheck struct {
 }
 
