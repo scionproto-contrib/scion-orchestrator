@@ -16,7 +16,7 @@ Currently, `scion-orchestrator` is a cross-platform Go tool (MacOS, Linux, Windo
 *   **Automated Cert Renewal:** Background cron-like process for renewing AS certificates when approaching expiration.
 *   **Bootstrapping & Metrics:** Built-in bootstrapping server (`:8041`) and telemetry integration.
 
-**Current Architectural Bottlenecks (Identified via Issue Tracker):**
+**Current Architectural Bottlenecks:**
 *   Service execution requires root privileges instead of a dedicated `scion` user (Issue #11).
 *   Certificate management lacks resilience (e.g., handling future-valid certs, multi-CA fallbacks) (Issues #14, #15, #16).
 *   Deployment is manual (building from source/binaries) instead of using standard package managers (Issue #17).
