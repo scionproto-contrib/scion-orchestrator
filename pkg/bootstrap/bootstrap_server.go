@@ -67,7 +67,7 @@ func RunBootstrapServer(configDir string, url string, config *conf.Config) error
 		} else if strings.HasPrefix(r.URL.Path, "/trcs") {
 			if match, _ := regexp.MatchString(`^/trcs/isd\d+-b\d+-s\d+$`, r.URL.Path); match {
 				isd, base, serial := parseISDBSerial(r.URL.Path)
-				trc := fmt.Sprintf("isd%s-b%s-s%s.json", isd, base, serial)
+				trc := fmt.Sprintf("ISD%s-B%s-S%s.json", isd, base, serial)
 				trcFile := filepath.Join(configDir, "certs", trc)
 				log.Println("[Bootstrap Server] Serving TRC file: ", trcFile)
 				http.ServeFile(w, r, trcFile)

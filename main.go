@@ -255,7 +255,7 @@ func runRestart(env *environment.HostEnvironment, config *conf.SCIONConfig, asCo
 }
 
 func runBackgroundServices(env *environment.HostEnvironment, config *conf.Config, scionConfig *conf.SCIONConfig) error {
-	log.Println("[Main] Running background services")
+	log.Println("[Main] Running background services for scion-orchestrator")
 	var eg errgroup.Group
 
 	eg.Go(func() error {
