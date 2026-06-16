@@ -3,6 +3,23 @@ This tool called `scion-orchestrator` allows to setup SCION connectivity on a ho
 
 So far we do not provide pre-built binaries, so please take a look at **Get the binaries** to build all the tooling
 
+## AS Installation
+We recommend installing the orchestrator with the releases available in this repository and via the UI installer. Follow these steps to install an AS:
+
+1. Download release archive.
+2. Extract archive
+3. Run sudo ./scion-orchestrator
+4. Follow the instructions printed in the terminal to access the UI
+5. Accept the self-signed certificate by clicking on "proceed anyway"
+6. Follow the installation instructions and install the orchestrator
+7. Check the "Get Started" section after installation to perform the first steps
+
+## Generate new release
+To create new release, run `make release` and then create releases on github for each candidate and append the generated archives, at the moment we have releases for the regular leaf AS installation.
+
+## Updating an existing installation
+To achieve this, we probably need an update mechanism, which is not implemented so far. Usually, the binaries need to be overwritten and configurations might be updated. However, its non trivial if fields in SCION itself change.
+
 ## Supported Platforms
 Standalone/run:
 - [x] MacOS Arm64

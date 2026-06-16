@@ -43,3 +43,8 @@ config_latest/
 
 bin_release
 .DS_Store
+
+*.zip
+*.tar.gz
+
+release/linux_amd64
