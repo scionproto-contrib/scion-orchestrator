@@ -15,7 +15,7 @@ We recommend installing the orchestrator with the releases available in this rep
 7. Check the "Get Started" section after installation to perform the first steps
 
 ## Generate new release
-To create new release, run `make release` and then create releases on github for each candidate and append the generated archives, at the moment we have releases for the regular leaf AS installation.
+To create new release, run `make release` and then create releases on github (Menu: Draft new release...) for each candidate (LeafAS etc.) and append the generated archives, at the moment we have releases for the regular leaf AS installation.
 
 ## Updating an existing installation
 To achieve this, we probably need an update mechanism, which is not implemented so far. Usually, the binaries need to be overwritten and configurations might be updated. However, its non trivial if fields in SCION itself change.
