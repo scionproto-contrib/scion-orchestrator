@@ -33,6 +33,14 @@ type CA struct {
 	CertValidityHours int `toml:"cert_validity_hours,omitempty"`
 	Clients           []string
 	Server            string
+	PKCS11            *PKCS11 `toml:"pkcs11,omitempty"`
+}
+
+type PKCS11 struct {
+	ModulePath string `toml:"module_path,omitempty"`
+	TokenLabel string `toml:"token_label,omitempty"`
+	Pin        string `toml:"token_pin,omitempty"`
+	KeyLabel   string `toml:"key_label,omitempty"`
 }
 
 type Bootstrap struct {
@@ -69,6 +77,7 @@ func NewConfig() *Config {
 			CertValidityHours: 72,
 			Server:            "127.0.0.1:3000",
 			Clients:           []string{},
+			PKCS11:            nil,
 		},
 		Api: Api{
 			Address: "127.0.0.1:8843",
