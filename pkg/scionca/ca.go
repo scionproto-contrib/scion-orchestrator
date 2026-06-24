@@ -156,33 +156,38 @@ func (ca *SCIONCertificateAuthority) IssueCertificateFromCSR(csrFile string, dst
 	return nil
 }
 
-// loadCertAndKey loads the certificate and private key from PEM-encoded data
-func loadCertAndKey(certPEM, keyPEM []byte) (*x509.Certificate, *ecdsa.PrivateKey, error) {
+// loadCert loads the certificate from PEM-encoded data
+func loadCert(certPEM []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(certPEM)
 	if block == nil || block.Type != "CERTIFICATE" {
-		return nil, nil, fmt.Errorf("failed to decode certificate PEM")
+		return nil, fmt.Errorf("failed to decode certificate PEM")
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse certificate: %v", err)
+		return nil, fmt.Errorf("failed to parse certificate: %v", err)
 	}
 
-	block, _ = pem.Decode(keyPEM)
+	return cert, nil
+}
+
+// loadKey loads the private key from PEM-encoded data
+func loadKey(keyPEM []byte) (*ecdsa.PrivateKey, error) {
+	block, _ := pem.Decode(keyPEM)
 	if block == nil || block.Type != "PRIVATE KEY" {
-		return nil, nil, fmt.Errorf("failed to decode private key PEM")
+		return nil, fmt.Errorf("failed to decode private key PEM")
 	}
 	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse private key: %v", err)
+		return nil, fmt.Errorf("failed to parse private key: %v", err)
 	}
 
 	// Assert that the parsed key is of type *ecdsa.PrivateKey
 	key, ok := parsedKey.(*ecdsa.PrivateKey)
 	if !ok {
-		return nil, nil, fmt.Errorf("not an ECDSA private key")
+		return nil, fmt.Errorf("not an ECDSA private key")
 	}
 
-	return cert, key, nil
+	return key, nil
 }
 
 func formatPEMString(pemStr string) []byte {
