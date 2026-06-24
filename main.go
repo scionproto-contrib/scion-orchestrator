@@ -258,6 +258,11 @@ func runBackgroundServices(env *environment.HostEnvironment, config *conf.Config
 	log.Println("[Main] Running background services for scion-orchestrator")
 	var eg errgroup.Group
 
+	// Need to set IsCa before API loads, otherwise it will not export CA api
+	if len(config.Ca.Clients) > 0 {
+		metrics.Status.IsCa = true
+	}
+
 	eg.Go(func() error {
 		return metrics.RunStatusHTTPServer(config.Metrics.Server)
 	})
@@ -340,8 +345,6 @@ func runBackgroundServices(env *environment.HostEnvironment, config *conf.Config
 				if err != nil {
 					return err
 				}
-
-				metrics.Status.IsCa = true
 
 				return apiServer.Run()
 			})
