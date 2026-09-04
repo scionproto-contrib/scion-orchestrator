@@ -1,3 +1,6 @@
+// Copyright 2026 OVGU Magdeburg
+// SPDX-License-Identifier: Apache-2.0
+
 package scionca
 
 // This file is auto-generated, don't modify it manually

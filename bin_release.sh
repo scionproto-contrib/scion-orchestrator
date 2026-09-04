@@ -1,9 +1,12 @@
 # !/bin/bash
+# Copyright 2026 OVGU Magdeburg
+# SPDX-License-Identifier: Apache-2.0
+
 set -e
 # Check if dev directory exists
 if [ -d "dev" ]; then
     echo "Directory dev exists."
-else 
+else
     mkdir dev
     cd dev
     git clone https://github.com/scionproto/scion.git
@@ -40,7 +43,7 @@ build_and_copy_binaries() {
         echo $(pwd)
     done
 
-   
+
 
     # Copy binaries to bin directory
     cp scion/cmd/scion/scion "../../$bin_dir/"
@@ -55,11 +58,11 @@ build_and_copy_binaries() {
     # Final build with environment variables, if needed
     CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} go build
 
-   
+
     # Copy final binary to bin directory
     if [ -f "scion-orchestrator.exe" ]; then
         cp scion-orchestrator.exe "$bin_dir/"
-    else 
+    else
         cp scion-orchestrator "$bin_dir/"
     fi
 }

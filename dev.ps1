@@ -1,3 +1,6 @@
+# Copyright 2026 OVGU Magdeburg
+# SPDX-License-Identifier: Apache-2.0
+
 param (
     [string]$Repository = "https://github.com/scionproto/scion.git",
     [string]$Tag = "v0.12.0",
