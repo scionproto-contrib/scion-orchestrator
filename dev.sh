@@ -1,9 +1,12 @@
 # !/bin/bash
+# Copyright 2026 OVGU Magdeburg
+# SPDX-License-Identifier: Apache-2.0
+
 set -e
 # Check if dev directory exists
 if [ -d "dev" ]; then
     echo "Directory dev exists."
-else 
+else
     mkdir dev
     cd dev
     git clone https://github.com/scionproto/scion.git
