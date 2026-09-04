@@ -2,6 +2,7 @@ package scionca
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/x509"
@@ -17,32 +18,78 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ThalesGroup/crypto11"
+	"github.com/netsys-lab/scion-orchestrator/conf"
 	"github.com/netsys-lab/scion-orchestrator/pkg/fileops"
 	"github.com/scionproto/scion/pkg/scrypto/cppki"
 )
 
 type SCIONCertificateAuthority struct {
 	ConfigDir         string
+	CaConfig          conf.CA
 	CaCertificate     *x509.Certificate
-	CaPrivateKey      *ecdsa.PrivateKey
+	CaPrivateKey      crypto.Signer
 	ISD               string
 	CertValidityHours int
 }
 
-func NewSCIONCertificateAuthority(configDir string, isd string, certValidityHours int) *SCIONCertificateAuthority {
+func loadPKCS11Signer(KeyId []byte, pkcs11Conf crypto11.Config) (crypto.Signer, error) {
 
+	ctx, err := crypto11.Configure(&pkcs11Conf)
+	if err != nil {
+		return nil, err
+	}
+	signer, err := ctx.FindKeyPair(nil, []byte(KeyId))
+	if err != nil {
+		return nil, err
+	}
+
+	return signer, nil
+}
+
+func NewSCIONCertificateAuthority(configDir string, isd string, conf conf.CA) *SCIONCertificateAuthority {
 	return &SCIONCertificateAuthority{
-		ConfigDir:         configDir,
-		ISD:               isd,
-		CertValidityHours: certValidityHours,
+		ConfigDir: configDir,
+		ISD:       isd,
+		CaConfig:  conf,
 	}
 }
 
 func (ca *SCIONCertificateAuthority) LoadCA() error {
-	// Load CA certificate and private key
 
 	caDir := filepath.Join(ca.ConfigDir, "crypto", "ca")
-	keyFile := filepath.Join(caDir, "cp-ca.key")
+
+	if ca.CaConfig.PKCS11 != nil {
+		pkcs11Conf := crypto11.Config{
+			Path:       ca.CaConfig.PKCS11.ModulePath,
+			TokenLabel: ca.CaConfig.PKCS11.TokenLabel,
+			Pin:        ca.CaConfig.PKCS11.Pin,
+		}
+		signer, err := loadPKCS11Signer([]byte(ca.CaConfig.PKCS11.KeyLabel), pkcs11Conf)
+		if err != nil {
+			return fmt.Errorf("Failed to initialize signer: %v\n", err)
+		}
+		ca.CaPrivateKey = signer
+
+		log.Printf("[CA] CA is using PKCS11 module %s for signing\n", ca.CaConfig.PKCS11.ModulePath)
+	} else {
+		// Load CA private key
+		keyFile := filepath.Join(caDir, "cp-ca.key")
+
+		caKeyPEM, err := os.ReadFile(keyFile)
+		if err != nil {
+			return fmt.Errorf("Failed to read CA private key: %v\n", err)
+		}
+		caKey, err := loadKey(caKeyPEM)
+		if err != nil {
+			return fmt.Errorf("Failed to load CA key: %v\n", err)
+		}
+		ca.CaPrivateKey = caKey
+
+		log.Println("[CA] CA is using cp-ca.key for signing")
+	}
+
+	// Load CA certificate
 
 	caCertFiles, err := fileops.ListFilesByPrefixAndSuffix(caDir, "ISD", ".crt")
 	if err != nil {
@@ -56,18 +103,13 @@ func (ca *SCIONCertificateAuthority) LoadCA() error {
 		return fmt.Errorf("Failed to read CA certificate: %v\n", err)
 
 	}
-	caKeyPEM, err := os.ReadFile(keyFile)
-	if err != nil {
-		return fmt.Errorf("Failed to read CA private key: %v\n", err)
-	}
 
-	caCert, caKey, err := loadCertAndKey(caCertPEM, caKeyPEM)
+	caCert, err := loadCert(caCertPEM)
 	if err != nil {
 		return fmt.Errorf("Failed to load CA cert and key: %v\n", err)
 	}
 
 	ca.CaCertificate = caCert
-	ca.CaPrivateKey = caKey
 	return nil
 }
 
@@ -156,33 +198,38 @@ func (ca *SCIONCertificateAuthority) IssueCertificateFromCSR(csrFile string, dst
 	return nil
 }
 
-// loadCertAndKey loads the certificate and private key from PEM-encoded data
-func loadCertAndKey(certPEM, keyPEM []byte) (*x509.Certificate, *ecdsa.PrivateKey, error) {
+// loadCert loads the certificate from PEM-encoded data
+func loadCert(certPEM []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(certPEM)
 	if block == nil || block.Type != "CERTIFICATE" {
-		return nil, nil, fmt.Errorf("failed to decode certificate PEM")
+		return nil, fmt.Errorf("failed to decode certificate PEM")
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse certificate: %v", err)
+		return nil, fmt.Errorf("failed to parse certificate: %v", err)
 	}
 
-	block, _ = pem.Decode(keyPEM)
+	return cert, nil
+}
+
+// loadKey loads the private key from PEM-encoded data
+func loadKey(keyPEM []byte) (*ecdsa.PrivateKey, error) {
+	block, _ := pem.Decode(keyPEM)
 	if block == nil || block.Type != "PRIVATE KEY" {
-		return nil, nil, fmt.Errorf("failed to decode private key PEM")
+		return nil, fmt.Errorf("failed to decode private key PEM")
 	}
 	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse private key: %v", err)
+		return nil, fmt.Errorf("failed to parse private key: %v", err)
 	}
 
 	// Assert that the parsed key is of type *ecdsa.PrivateKey
 	key, ok := parsedKey.(*ecdsa.PrivateKey)
 	if !ok {
-		return nil, nil, fmt.Errorf("not an ECDSA private key")
+		return nil, fmt.Errorf("not an ECDSA private key")
 	}
 
-	return cert, key, nil
+	return key, nil
 }
 
 func formatPEMString(pemStr string) []byte {

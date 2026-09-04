@@ -17,9 +17,8 @@ func SignCertificateByCSRHandler(eng *gin.RouterGroup, isdAS string, configDir s
 	// TODO: get ISD from isd-as
 	// TODO: get certValidity from config
 	// TODO: Better use CS API to talk to the CA?
-	validityHours := config.Ca.CertValidityHours
 	isd := scionutils.GetISDFromISDAS(isdAS)
-	ca := scionca.NewSCIONCertificateAuthority(configDir, isd, validityHours)
+	ca := scionca.NewSCIONCertificateAuthority(configDir, isd, config.Ca)
 
 	eng.POST("ca/certs/:isd/:as/sign", func(c *gin.Context) {
 		certIsd := c.Param("isd")
@@ -51,6 +50,7 @@ func SignCertificateByCSRHandler(eng *gin.RouterGroup, isdAS string, configDir s
 
 		err = ca.LoadCA()
 		if err != nil {
+			log.Printf("[API] Could not load the CA: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not load the CA"})
 			return
 		}

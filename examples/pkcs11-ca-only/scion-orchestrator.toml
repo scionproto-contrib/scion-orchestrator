@@ -1,0 +1,22 @@
+command = "service"
+isd_as = "1-150"
+mode = "as"
+
+
+[ca]
+server = ":3000"
+clients = ["123:client1.secret"] # Starts from configDir
+cert_validity_hours = 8760
+
+[ca.pkcs11]
+module_path = "/path/to/softhsm/libsofthsm2.so"
+token_label = "scionca"
+token_pin = "1234"
+key_label = "ca-key"
+
+# Disable all other services
+[service_config]
+disable_daemon = true
+disable_dispatcher = true
+disable_bootstrap_server = true
+disable_cert_renewal = true
