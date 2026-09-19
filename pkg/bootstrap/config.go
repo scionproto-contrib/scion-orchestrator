@@ -1,3 +1,6 @@
+// Copyright 2026 OVGU Magdeburg
+// SPDX-License-Identifier: Apache-2.0
+
 // Package config contains the configuration of bootstrapper.
 package bootstrap
 
