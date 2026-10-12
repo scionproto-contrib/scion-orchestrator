@@ -238,7 +238,25 @@ func runInstall(env *environment.HostEnvironment, asConfig *conf.Config, scionCo
 	} else {
 		jsonStatus, _ := metrics.Status.Json()
 		fmt.Printf("%s", string(jsonStatus))
+
 	}
+
+	installationConfig := conf.NewInstallationConfig()
+	installationConfig.ConfigPath = env.ConfigPath
+	installationConfig.DatabasePath = env.DatabasePath
+	installationConfig.LogPath = env.LogPath
+	installationConfig.BinaryPath = env.BinaryPath
+	installationConfig.ServicePath = env.ServicePath
+	installationConfig.InstalledAt = time.Now().Format(time.RFC3339)
+	installationConfig.LastUpdate = time.Now().Format(time.RFC3339)
+	installationConfig.ScionVersion = "v0.12.0"
+
+	err = installationConfig.Save(filepath.Join(env.ConfigPath, "installation.toml"))
+	if err != nil {
+		return fmt.Errorf("failed to save installation configuration: %w", err)
+	}
+
+	log.Println("[Install] Installation configuration saved successfully")
 
 	return nil
 }
