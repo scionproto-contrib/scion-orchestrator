@@ -40,6 +40,8 @@ type HostEnvironment struct {
 	DatabasePath      string
 	TmpConfigPath     string
 	LogPath           string
+	BinaryPath        string
+	ServicePath       string
 }
 
 func (endhostEnv *HostEnvironment) SetConfigPath(path string) {
@@ -83,7 +85,7 @@ func (endhostEnv *HostEnvironment) installBinaries() error {
 		return err
 	}
 
-	binPath := "/usr/bin/"
+	binPath := endhostEnv.BinaryPath
 
 	// TODO: Windows and MacOS Support!
 	switch runtime.GOOS {
@@ -181,7 +183,7 @@ func (endhostEnv *HostEnvironment) Install(setup *InstallSetup) error {
 		return err
 	}
 
-	err = HostEnv.installBinaries()
+	err = endhostEnv.installBinaries()
 	if err != nil {
 		return err
 	}

@@ -197,7 +197,7 @@ func GetServiceList() []SystemService {
 
 func LoadServices(env *HostEnvironment, config *conf.SCIONConfig, asConfig *conf.Config) error {
 
-	binPath := "/usr/bin/"
+	binPath := env.BinaryPath
 
 	// TODO: Windows and MacOS Support!
 	switch runtime.GOOS {

@@ -12,5 +12,7 @@ func init() {
 		RouterConfigPath:  "/etc/scion/",
 		DatabasePath:      "/var/lib/scion/",
 		LogPath:           "/var/log/scion/",
+		BinaryPath:        "/usr/bin/",
+		ServicePath:       "/etc/systemd/system/",
 	}
 }
