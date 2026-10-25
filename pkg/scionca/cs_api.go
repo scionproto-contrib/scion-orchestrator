@@ -171,7 +171,7 @@ func (ar *CaApiServer) renewCert(wr http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = os.WriteFile(csrFileName, csrPem, 0777)
+	err = os.WriteFile(csrFileName, csrPem, 0600)
 	if err != nil {
 		log.Println("[CA] Renew failed with error ", err)
 		sendProblem(wr, "/ra/isds/{isdNumber}/ases/{asNumber}/certificates/renewal", "Internal Server Error", http.StatusInternalServerError)
@@ -187,7 +187,7 @@ func (ar *CaApiServer) renewCert(wr http.ResponseWriter, req *http.Request) {
 		sendProblem(wr, "/ra/isds/{isdNumber}/ases/{asNumber}/certificates/renewal", "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	err = os.Chmod(file.Name(), 0777)
+	err = os.Chmod(file.Name(), 0600)
 	if err != nil {
 		log.Println("[CA] Renew failed with error ", err)
 		sendProblem(wr, "/ra/isds/{isdNumber}/ases/{asNumber}/certificates/renewal", "Internal Server Error", http.StatusInternalServerError)

@@ -105,7 +105,7 @@ func (endhostEnv *HostEnvironment) installBinaries() error {
 		}
 
 		// Make files executable
-		err = os.Chmod(filepath.Join(binPath, "scion-orchestrator"), 0777)
+		err = os.Chmod(filepath.Join(binPath, "scion-orchestrator"), 0755)
 		if err != nil {
 			return err
 		}
@@ -125,7 +125,7 @@ func (endhostEnv *HostEnvironment) installBinaries() error {
 			if err != nil {
 				return err
 			}
-			err = os.Chmod(filepath.Join(binPath, binary), 0777)
+			err = os.Chmod(filepath.Join(binPath, binary), 0755)
 			if err != nil {
 				return err
 			}
@@ -139,7 +139,7 @@ func (endhostEnv *HostEnvironment) installBinaries() error {
 		}
 
 		// Make files executable
-		err = os.Chmod(filepath.Join(binPath, "scion-orchestrator"), 0777)
+		err = os.Chmod(filepath.Join(binPath, "scion-orchestrator"), 0755)
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (endhostEnv *HostEnvironment) installBinaries() error {
 			if err != nil {
 				return err
 			}
-			err = os.Chmod(filepath.Join(binPath, binary), 0777)
+			err = os.Chmod(filepath.Join(binPath, binary), 0755)
 			if err != nil {
 				return err
 			}
@@ -195,7 +195,7 @@ func (endhostEnv *HostEnvironment) Install(setup *InstallSetup) error {
 
 	cryptoAsDir := filepath.Join(endhostEnv.ConfigPath, "crypto", "as")
 	if _, err := os.Stat(cryptoAsDir); os.IsNotExist(err) {
-		err = os.MkdirAll(cryptoAsDir, 0777)
+		err = os.MkdirAll(cryptoAsDir, 0700)
 		if err != nil {
 			return err
 		}
@@ -210,7 +210,7 @@ func (endhostEnv *HostEnvironment) Install(setup *InstallSetup) error {
 	keysFolder := filepath.Join(endhostEnv.ConfigPath, "keys")
 
 	if _, err := os.Stat(keysFolder); os.IsNotExist(err) {
-		err = os.MkdirAll(keysFolder, 0777)
+		err = os.MkdirAll(keysFolder, 0700)
 		if err != nil {
 			return err
 		}
@@ -228,7 +228,7 @@ func (endhostEnv *HostEnvironment) Install(setup *InstallSetup) error {
 		}
 		masterKey := base64.StdEncoding.EncodeToString(randomBytes)
 
-		key1File, err := os.OpenFile(destMasterKey0File, os.O_RDWR|os.O_CREATE, 0666)
+		key1File, err := os.OpenFile(destMasterKey0File, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			return err
 		}
@@ -239,7 +239,7 @@ func (endhostEnv *HostEnvironment) Install(setup *InstallSetup) error {
 			return err
 		}
 
-		key2File, err := os.OpenFile(destMasterKey1File, os.O_RDWR|os.O_CREATE, 0666)
+		key2File, err := os.OpenFile(destMasterKey1File, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			return err
 		}
